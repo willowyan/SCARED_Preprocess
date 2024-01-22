@@ -6,7 +6,7 @@ from os import listdir
 import tifffile as tiff
 import numpy as np
 import matplotlib.pyplot as plt
-
+import sys
 """
 Read depth images and convert into disparity map.
 """
@@ -187,6 +187,11 @@ def depth_to_disparity_both(path):
 
             disp_l = coor_to_disp(img_l, Q)
             disp_r = coor_to_disp(img_r, Q)
+
+            if disp_l.dtype != np.float32:
+                disp_l = disp_l.astype(np.float32)
+            if disp_r.dtype != np.float32:
+                disp_r = disp_r.astype(np.float32)
 
             write_pfm(disp_data_l, disp_l)  # Save using the PFM writer
             write_pfm(disp_data_r, disp_r)  # Save using the PFM writer
