@@ -194,4 +194,4 @@ def depth_to_disparity_both(path):
 
 if __name__ == '__main__':
     path = '/media/eikoloki/TOSHIBA EXT/MICCAI_SCARED/dataset2'
-    depth_to_disparity(path)
+    depth_to_disparity_both(path)
