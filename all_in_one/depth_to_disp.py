@@ -86,54 +86,85 @@ def read_Q(reprojection_file):
         return  Q
 
 
-def depth_to_disparity(path):
-    """
-    Processes all keyframes to convert depth map to disparity.
-    """
-    rootpath = path
-    keyframe_list = [os.path.join(rootpath, kf) for kf in listdir(rootpath) if ('keyframe' in kf and 'ignore' not in kf)]
+# def depth_to_disparity(path):
+#     """
+#     Processes all keyframes to convert depth map to disparity.
+#     """
+#     rootpath = path
+#     keyframe_list = [os.path.join(rootpath, kf) for kf in listdir(rootpath) if ('keyframe' in kf and 'ignore' not in kf)]
     
-    for kf in keyframe_list:
-        # Paths for coord., reprojection data, and disparity maps
-        coor_filepath = os.path.join(rootpath,kf) + '/data/scene_points'
-        if not os.path.isdir(coor_filepath):
-            continue
-        reprojection_filepath = os.path.join(rootpath, kf) + '/data/reprojection_data'
-        disp_filepath = os.path.join(rootpath,kf) + '/data/disparity'
+#     for kf in keyframe_list:
+#         # Paths for coord., reprojection data, and disparity maps
+#         coor_filepath = os.path.join(rootpath,kf) + '/data/scene_points'
+#         if not os.path.isdir(coor_filepath):
+#             continue
+#         reprojection_filepath = os.path.join(rootpath, kf) + '/data/reprojection_data'
+#         disp_filepath = os.path.join(rootpath,kf) + '/data/disparity'
 
-        if not os.path.isdir(disp_filepath):
-            os.mkdir(disp_filepath)
+#         if not os.path.isdir(disp_filepath):
+#             os.mkdir(disp_filepath)
 
-        frame_list = listdir(reprojection_filepath)
+#         frame_list = listdir(reprojection_filepath)
 
-        # Process each frame
-        for i in range(len(frame_list)):
-            reprojection_data = reprojection_filepath + '/frame_data%.6d.json' % i
-            coor_data = coor_filepath + '/scene_points%.6d.tiff' % i
-            disp_data = disp_filepath + '/frame_data%.6d.tiff' % i
-            print('Saving disparity to:', disp_data)
+#         # Process each frame
+#         for i in range(len(frame_list)):
+#             reprojection_data = reprojection_filepath + '/frame_data%.6d.json' % i
+#             coor_data = coor_filepath + '/scene_points%.6d.tiff' % i
+#             disp_data = disp_filepath + '/frame_data%.6d.tiff' % i
+#             print('Saving disparity to:', disp_data)
 
-            # Read reprojection matrix and TIFF file and calculate disparity
-            Q = read_Q(reprojection_data)
-            img_l, img_r = tiff_reader(coor_data)
-            disp = coor_to_disp(img_l, Q)
-            cv2.imwrite(disp_data, disp)
+#             # Read reprojection matrix and TIFF file and calculate disparity
+#             Q = read_Q(reprojection_data)
+#             img_l, img_r = tiff_reader(coor_data)
+#             disp = coor_to_disp(img_l, Q)
+#             cv2.imwrite(disp_data, disp)
+
+def write_pfm(file, image, scale=1):
+    """
+    Writes a numpy image to a PFM file.
+    """
+    with open(file, 'wb') as f:
+        color = None
+
+        if image.dtype.name != 'float32':
+            raise Exception('Image dtype must be float32.')
+
+        image = np.flipud(image)  # PFM files store the image flipped vertically
+
+        if len(image.shape) == 3 and image.shape[2] == 3:  # color image
+            color = True
+        elif len(image.shape) == 2 or len(image.shape) == 3 and image.shape[2] == 1:  # grayscale
+            color = False
+        else:
+            raise Exception('Image must have H x W x 3, H x W x 1 or H x W dimensions.')
+
+        f.write(b'PF\n' if color else b'Pf\n')
+        f.write(b'%d %d\n' % (image.shape[1], image.shape[0]))
+
+        endian = image.dtype.byteorder
+
+        if endian == '<' or endian == '=' and sys.byteorder == 'little':
+            scale = -scale
+
+        f.write(b'%f\n' % scale)
+
+        image.tofile(f)
 
 def depth_to_disparity_both(path):
     """
-    Processes all keyframes to convert depth map to disparity.
+    Processes all keyframes to convert depth map to disparity and saves them in PFM format.
     """
     rootpath = path
-    keyframe_list = [os.path.join(rootpath, kf) for kf in listdir(rootpath) if ('keyframe' in kf and 'ignore' not in kf)]
+    keyframe_list = [os.path.join(rootpath, kf) for kf in os.listdir(rootpath) if ('keyframe' in kf and 'ignore' not in kf)]
 
     for kf in keyframe_list:
         # Paths for coord., reprojection data, and disparity maps
-        coor_filepath = os.path.join(rootpath,kf) + '/data/scene_points'
+        coor_filepath = os.path.join(rootpath, kf) + '/data/scene_points'
         if not os.path.isdir(coor_filepath):
             continue
         reprojection_filepath = os.path.join(rootpath, kf) + '/data/reprojection_data'
-        disp_filepath_l = os.path.join(rootpath,kf) + '/data/disparity_left'
-        disp_filepath_r = os.path.join(rootpath,kf) + '/data/disparity_right'
+        disp_filepath_l = os.path.join(rootpath, kf) + '/data/disparity_left'
+        disp_filepath_r = os.path.join(rootpath, kf) + '/data/disparity_right'
 
         if not os.path.isdir(disp_filepath_l):
             os.mkdir(disp_filepath_l)
@@ -141,14 +172,14 @@ def depth_to_disparity_both(path):
         if not os.path.isdir(disp_filepath_r):
             os.mkdir(disp_filepath_r)
 
-        frame_list = listdir(reprojection_filepath)
+        frame_list = os.listdir(reprojection_filepath)
 
         # Process each frame
         for i in range(len(frame_list)):
             reprojection_data = reprojection_filepath + '/frame_data%.6d.json' % i
             coor_data = coor_filepath + '/scene_points%.6d.tiff' % i
-            disp_data_l = disp_filepath_l + '/frame_data%.6d.tiff' % i
-            disp_data_r = disp_filepath_r + '/frame_data%.6d.tiff' % i
+            disp_data_l = disp_filepath_l + '/frame_data%.6d.pfm' % i  # Save as PFM
+            disp_data_r = disp_filepath_r + '/frame_data%.6d.pfm' % i  # Save as PFM
 
             # Read reprojection matrix and TIFF file and calculate disparity
             Q = read_Q(reprojection_data)
@@ -156,8 +187,9 @@ def depth_to_disparity_both(path):
 
             disp_l = coor_to_disp(img_l, Q)
             disp_r = coor_to_disp(img_r, Q)
-            cv2.imwrite(disp_data_l, disp_l)
-            cv2.imwrite(disp_data_r, disp_r)
+
+            write_pfm(disp_data_l, disp_l)  # Save using the PFM writer
+            write_pfm(disp_data_r, disp_r)  # Save using the PFM writer
             print('Saving disparity to:', disp_data_l, 'and', disp_data_r)
 
 if __name__ == '__main__':
