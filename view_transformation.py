@@ -127,20 +127,15 @@ def get_img_pair(image_filepath, current_num, forward_step):
     return current_img, next_img
 
 def main():
-
-
     rootpath = '/media/xiran_zhang/TOSHIBA EXT/MICCAI_SCARED/dataset3'
     camera_filepath = join(rootpath, 'keyframe_1/data/frame_data')
     pointcloud_filepath = join(rootpath, 'keyframe_1/data/scene_points')
     img_filepath = join(rootpath, 'keyframe_1/data/left_finalpass')
 
-
-
     current_num  = 0
     forward_step = 250
     pc1, pc2, pose1, pose2, camera_para1, dist_coeff1, camera_para2, dist_coeff2 = get_scene_pair(pointcloud_filepath, camera_filepath, current_num, forward_step)
     img1, img2 = get_img_pair(img_filepath, current_num, forward_step)
-
 
     transformed_pc1, img_original = view_transfer(pose1, pose2, pc1, img1)
 
