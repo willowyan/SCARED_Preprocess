@@ -106,7 +106,6 @@ def reprojection_depth(transformed_point_cloud, l_camera_matrix, l_dist_coeff):
 
     return  reproject_depth
 
-
 def get_scene_pair(pointcloud_filepath, camera_filepath, current_num,forward_step):
     current_scene = tiff_reader(join(pointcloud_filepath, "scene_points%.6d.tiff" % current_num))
     next_scene = tiff_reader(join(pointcloud_filepath, "scene_points%.6d.tiff" % (current_num + forward_step)))
@@ -167,7 +166,6 @@ def main():
 
     cv2.imwrite('difference.png', original_img2/2 + reprojected_to_img2/2)
     """
-
 
 if __name__ == '__main__':
     main()
