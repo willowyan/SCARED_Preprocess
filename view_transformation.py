@@ -80,7 +80,6 @@ def reprojection_img(transformed_point_cloud, image_original, l_camera_matrix, l
 
     return reproject_img
 
-
 def reprojection_depth(transformed_point_cloud, l_camera_matrix, l_dist_coeff):
     rvec = np.zeros((3, 1))
     tvec = np.zeros((3, 1))
