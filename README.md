@@ -14,4 +14,4 @@
     - `disparity_left(right)`: contains .tiff files of disparity map
     - `occl_left(right)`: contains .png files of occlusion map
 
-Modified from: https://github.com/EikoLoki/MICCAI_challenge_preprocess
+Reference: https://github.com/EikoLoki/MICCAI_challenge_preprocess
